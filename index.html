@@ -192,9 +192,52 @@
             border-radius: 50%;
             opacity: 0.3;
         }
+        /* Mobile Controls */
+        #mobile-controls {
+            display: none;
+            justify-content: space-around;
+            padding: 15px 0;
+        }
+
+        .mobile-btn {
+            background: rgba(180, 0, 255, 0.2);
+            color: var(--neon-purple);
+            border: 2px solid var(--neon-purple);
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--neon-purple);
+        }
+
+        /* Show mobile controls only on small screens */
+        @media (max-width: 768px) {
+            #mobile-controls {
+                display: flex;
+            }
+            #controls {
+                display: none;
+            }
+        }
+        /* Touch feedback */
+        .cell.touched {
+            background: rgba(0, 200, 255, 0.1);
+            transform: scale(0.95);
+        }
+
+        /* Prevent text selection on buttons */
+        button {
+            user-select: none;
+            -webkit-user-select: none;
+        }
     </style>
 </head>
 <body>
+    <div id="mobile-controls">
+        <button class="mobile-btn" onclick="resetGame()">RESET</button>
+        <button class="mobile-btn" onclick="showMainMenu()">MENU</button>
+    </div>
     <div id="game-container">
         <div id="menu">
             <div class="menu-title">NEON TIC TAC TOE</div>
@@ -266,8 +309,16 @@
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.dataset.index = i;
-                cell.addEventListener('click', handleCellClick);
-                cell.addEventListener('touchstart', handleCellClick, { passive: true });
+                // Replace existing cell event listeners with these:
+                cell.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // Prevent touch scroll
+                    this.classList.add('touched');
+                    handleCellClick({target: this});
+                }, {passive: false});
+
+                cell.addEventListener('touchend', function() {
+                    this.classList.remove('touched');
+                });
                 boardElement.appendChild(cell);
             }
             
@@ -614,7 +665,17 @@
             onlineMenu.style.display = 'none';
             mainMenu.style.display = 'flex';
         }
-        
+        // Only enable keyboard shortcuts on desktop
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        if (!isMobile()) {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') showMainMenu();
+                if (e.key === 'r' || e.key === 'R') resetGame();
+            });
+        }
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
