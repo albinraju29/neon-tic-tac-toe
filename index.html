@@ -1,76 +1,247 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NEON TIC TAC TOE (Web)</title>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
-    <script src="https://pygame-web.github.io/install.js"></script>
+    <title>NEON TIC TAC TOE</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             background-color: #0a0a14;
-            color: white;
+            color: #00c8ff;
+            font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
             padding: 20px;
+            overflow: hidden;
         }
         #game-container {
-            margin: 20px auto;
             width: 600px;
             height: 700px;
+            margin: 0 auto;
+            position: relative;
         }
-        #loading {
-            margin-top: 50px;
-            font-size: 24px;
+        #board {
+            width: 600px;
+            height: 600px;
+            margin-top: 100px;
+            position: relative;
+        }
+        .cell {
+            width: 200px;
+            height: 200px;
+            float: left;
+            box-sizing: border-box;
+            position: relative;
+            cursor: pointer;
+        }
+        .symbol {
+            font-size: 80px;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-shadow: 0 0 10px currentColor;
+        }
+        .x {
             color: #00c8ff;
+        }
+        .o {
+            color: #ff0080;
+        }
+        #status {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 0 0 10px #00c8ff;
+        }
+        #scores {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .neon-line {
+            position: absolute;
+            background-color: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
         }
     </style>
 </head>
 <body>
-    <h1>NEON TIC TAC TOE</h1>
-    <div id="game-container"></div>
-    <div id="loading">Loading game (may take 30 seconds)...</div>
+    <div id="game-container">
+        <div id="status">Player X's turn</div>
+        <div id="scores">X: 0 | O: 0 | Draws: 0</div>
+        <div id="board"></div>
+    </div>
 
     <script>
-        // Initialize Pyodide and load pygame
-        async function setupPygame() {
-            console.log("Setting up Pyodide...");
-            
-            // Load Pyodide
-            let pyodide = await loadPyodide({
-                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
-            });
-            
-            // Load required packages
-            await pyodide.loadPackage(["micropip"]);
-            await pyodide.runPythonAsync(`
-                import micropip
-                await micropip.install('pygame')
-            `);
-            
-            return pyodide;
+        // Game state
+        const board = Array(9).fill(null);
+        let currentPlayer = 'X';
+        let winner = null;
+        let scores = { X: 0, O: 0, Draw: 0 };
+        let winLine = null;
+
+        // Create board
+        const boardElement = document.getElementById('board');
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.index = i;
+            cell.addEventListener('click', handleCellClick);
+            boardElement.appendChild(cell);
         }
 
-        // Main game loader
-        async function loadGame() {
-            const pyodide = await setupPygame();
-            const response = await fetch("tictacto.py");
-            const code = await response.text();
+        // Draw board lines
+        function drawBoardLines() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = 600;
+            canvas.style.position = 'absolute';
+            canvas.style.top = '100px';
+            canvas.style.left = '0';
+            canvas.style.pointerEvents = 'none';
+            document.getElementById('game-container').appendChild(canvas);
             
-            // Hide loading message
-            document.getElementById("loading").style.display = "none";
+            const ctx = canvas.getContext('2d');
+            ctx.strokeStyle = '#b400ff';
+            ctx.lineWidth = 3;
             
-            // Run the game
-            try {
-                await pyodide.runPythonAsync(code);
-            } catch (e) {
-                console.error("Error running game:", e);
-                document.getElementById("loading").textContent = 
-                    "Error: Game couldn't load. Check console for details.";
+            // Vertical lines
+            ctx.beginPath();
+            ctx.moveTo(200, 100);
+            ctx.lineTo(200, 700);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(400, 100);
+            ctx.lineTo(400, 700);
+            ctx.stroke();
+            
+            // Horizontal lines
+            ctx.beginPath();
+            ctx.moveTo(0, 300);
+            ctx.lineTo(600, 300);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 500);
+            ctx.lineTo(600, 500);
+            ctx.stroke();
+        }
+
+        // Initialize board
+        drawBoardLines();
+
+        // Game functions
+        function handleCellClick(e) {
+            if (winner) return;
+            
+            const index = e.target.dataset.index;
+            if (board[index]) return;
+            
+            board[index] = currentPlayer;
+            renderBoard();
+            
+            winner = checkWinner();
+            if (winner) {
+                scores[winner]++;
+                renderWinLine();
+                updateStatus();
+                updateScores();
+                return;
+            }
+            
+            if (isBoardFull()) {
+                winner = 'Draw';
+                scores.Draw++;
+                updateStatus();
+                updateScores();
+                return;
+            }
+            
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            updateStatus();
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]             // diagonals
+            ];
+
+            for (const pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    winLine = pattern;
+                    return board[a];
+                }
+            }
+            return null;
+        }
+
+        function isBoardFull() {
+            return board.every(cell => cell !== null);
+        }
+
+        function renderBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.innerHTML = board[index] 
+                    ? `<div class="symbol ${board[index].toLowerCase()}">${board[index]}</div>`
+                    : '';
+            });
+        }
+
+        function renderWinLine() {
+            if (!winLine) return;
+            
+            // Remove existing win line if any
+            const existingLine = document.querySelector('.neon-line');
+            if (existingLine) existingLine.remove();
+            
+            const line = document.createElement('div');
+            line.className = 'neon-line';
+            
+            const [a, b, c] = winLine;
+            const cellSize = 200;
+            const startX = (a % 3) * cellSize + cellSize / 2;
+            const startY = Math.floor(a / 3) * cellSize + cellSize / 2 + 100;
+            const endX = (c % 3) * cellSize + cellSize / 2;
+            const endY = Math.floor(c / 3) * cellSize + cellSize / 2 + 100;
+            
+            const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+            const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+            
+            line.style.width = `${length}px`;
+            line.style.height = '6px';
+            line.style.left = `${startX}px`;
+            line.style.top = `${startY}px`;
+            line.style.transformOrigin = '0 50%';
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            document.getElementById('game-container').appendChild(line);
+        }
+
+        function updateStatus() {
+            const status = document.getElementById('status');
+            if (winner) {
+                status.textContent = winner === 'Draw' 
+                    ? "It's a Draw!" 
+                    : `Player ${winner} wins!`;
+                status.style.color = winner === 'Draw' ? '#cccccc' : '#00ff00';
+            } else {
+                status.textContent = `Player ${currentPlayer}'s turn`;
+                status.style.color = currentPlayer === 'X' ? '#00c8ff' : '#ff0080';
             }
         }
 
-        // Start loading the game
-        loadGame();
+        function updateScores() {
+            document.getElementById('scores').textContent = 
+                `X: ${scores.X} | O: ${scores.O} | Draws: ${scores.Draw}`;
+        }
+
+        // Initialize game
+        updateStatus();
+        updateScores();
     </script>
 </body>
 </html>
