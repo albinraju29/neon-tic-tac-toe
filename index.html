@@ -2,73 +2,236 @@
 <html>
 <head>
     <title>NEON TIC TAC TOE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
+        :root {
+            --neon-blue: #00c8ff;
+            --neon-pink: #ff0080;
+            --neon-purple: #b400ff;
+            --dark-bg: #0a0a14;
+        }
+        
         body {
-            background-color: #0a0a14;
-            color: #00c8ff;
-            font-family: Arial, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--neon-blue);
+            font-family: 'Arial', sans-serif;
             text-align: center;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            touch-action: manipulation;
             overflow: hidden;
+            height: 100vh;
         }
+        
         #game-container {
-            width: 600px;
-            height: 700px;
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
             margin: 0 auto;
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
-        #board {
-            width: 600px;
-            height: 600px;
-            margin-top: 100px;
+        
+        #header {
+            padding: 10px 0;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px var(--neon-blue);
+            letter-spacing: 2px;
+        }
+        
+        #status {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 30px;
+        }
+        
+        #scores {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        #board-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             position: relative;
         }
+        
+        #board {
+            width: 90vmin;
+            height: 90vmin;
+            max-width: 500px;
+            max-height: 500px;
+            position: relative;
+            margin: 0 auto;
+        }
+        
         .cell {
-            width: 200px;
-            height: 200px;
+            width: 33.33%;
+            height: 33.33%;
             float: left;
-            box-sizing: border-box;
             position: relative;
             cursor: pointer;
         }
+        
         .symbol {
-            font-size: 80px;
-            font-weight: bold;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            text-shadow: 0 0 10px currentColor;
-        }
-        .x {
-            color: #00c8ff;
-        }
-        .o {
-            color: #ff0080;
-        }
-        #status {
-            font-size: 30px;
+            font-size: 15vmin;
             font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 0 0 10px #00c8ff;
+            text-shadow: 0 0 15px currentColor;
         }
-        #scores {
-            font-size: 20px;
-            margin-bottom: 20px;
+        
+        .x {
+            color: var(--neon-blue);
         }
-        .neon-line {
+        
+        .o {
+            color: var(--neon-pink);
+        }
+        
+        .win-line {
             position: absolute;
             background-color: #00ff00;
-            box-shadow: 0 0 10px #00ff00;
+            box-shadow: 0 0 15px #00ff00;
+            height: 8px;
+            transform-origin: 0 50%;
+            z-index: 10;
+        }
+        
+        #menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 10, 20, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .menu-title {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+        
+        .menu-option {
+            font-size: 1.8rem;
+            margin: 15px 0;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .menu-option:hover {
+            background-color: rgba(0, 200, 255, 0.2);
+            text-shadow: 0 0 10px currentColor;
+        }
+        
+        .difficulty-option {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            cursor: pointer;
+            padding: 8px 15px;
+        }
+        
+        #controls {
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--neon-purple);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 5px;
+        }
+        
+        .control-btn:hover {
+            text-shadow: 0 0 8px var(--neon-purple);
+        }
+        
+        /* Board lines */
+        .board-line {
+            position: absolute;
+            background-color: var(--neon-purple);
+            box-shadow: 0 0 8px var(--neon-purple);
+        }
+        
+        .vertical {
+            width: 4px;
+            height: 100%;
+        }
+        
+        .horizontal {
+            width: 100%;
+            height: 4px;
+        }
+        
+        /* Glow effects */
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.3;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="status">Player X's turn</div>
-        <div id="scores">X: 0 | O: 0 | Draws: 0</div>
-        <div id="board"></div>
+        <div id="menu">
+            <div class="menu-title">NEON TIC TAC TOE</div>
+            <div class="menu-option" onclick="startGame(1)">VS AI</div>
+            <div class="menu-option" onclick="startGame(2)">2 PLAYERS</div>
+            <div id="online-option" class="menu-option" onclick="showOnlineMenu()">ONLINE MATCH</div>
+        </div>
+        
+        <div id="difficulty-menu" style="display: none;">
+            <div class="menu-title">SELECT DIFFICULTY</div>
+            <div class="difficulty-option" onclick="setDifficulty('Easy')">EASY</div>
+            <div class="difficulty-option" onclick="setDifficulty('Medium')">MEDIUM</div>
+            <div class="difficulty-option" onclick="setDifficulty('Hard')">HARD</div>
+            <div class="control-btn" onclick="backToMainMenu()">BACK</div>
+        </div>
+        
+        <div id="online-menu" style="display: none;">
+            <div class="menu-title">ONLINE SETUP</div>
+            <div class="menu-option" onclick="hostGame()">HOST GAME</div>
+            <div class="menu-option" onclick="joinGame()">JOIN GAME</div>
+            <div class="control-btn" onclick="backToMainMenu()">BACK</div>
+        </div>
+        
+        <div id="header" style="display: none;">
+            <h1>NEON TIC TAC TOE</h1>
+            <div id="status">Player X's turn</div>
+            <div id="scores">X: 0 | O: 0 | Draws: 0</div>
+        </div>
+        
+        <div id="board-container" style="display: none;">
+            <div id="board"></div>
+        </div>
+        
+        <div id="controls" style="display: none;">
+            <button class="control-btn" onclick="resetGame()">RESET (R)</button>
+            <button class="control-btn" onclick="showMainMenu()">MENU (ESC)</button>
+        </div>
     </div>
 
     <script>
@@ -78,66 +241,107 @@
         let winner = null;
         let scores = { X: 0, O: 0, Draw: 0 };
         let winLine = null;
-
-        // Create board
+        let gameMode = null; // 1: AI, 2: 2P, 3: Online
+        let difficulty = 'Hard';
+        let isOnlineHost = false;
+        let connection = null;
+        
+        // DOM elements
         const boardElement = document.getElementById('board');
-        for (let i = 0; i < 9; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.dataset.index = i;
-            cell.addEventListener('click', handleCellClick);
-            boardElement.appendChild(cell);
-        }
-
-        // Draw board lines
-        function drawBoardLines() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 600;
-            canvas.height = 600;
-            canvas.style.position = 'absolute';
-            canvas.style.top = '100px';
-            canvas.style.left = '0';
-            canvas.style.pointerEvents = 'none';
-            document.getElementById('game-container').appendChild(canvas);
+        const statusElement = document.getElementById('status');
+        const scoresElement = document.getElementById('scores');
+        const mainMenu = document.getElementById('menu');
+        const difficultyMenu = document.getElementById('difficulty-menu');
+        const onlineMenu = document.getElementById('online-menu');
+        const header = document.getElementById('header');
+        const boardContainer = document.getElementById('board-container');
+        const controls = document.getElementById('controls');
+        
+        // Initialize board
+        function initializeBoard() {
+            boardElement.innerHTML = '';
             
-            const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = '#b400ff';
-            ctx.lineWidth = 3;
+            // Create cells
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', handleCellClick);
+                cell.addEventListener('touchstart', handleCellClick, { passive: true });
+                boardElement.appendChild(cell);
+            }
+            
+            // Draw board lines
+            drawBoardLines();
+            
+            // Add glow effects
+            addGlowEffects();
+        }
+        
+        function drawBoardLines() {
+            // Clear existing lines
+            document.querySelectorAll('.board-line').forEach(el => el.remove());
             
             // Vertical lines
-            ctx.beginPath();
-            ctx.moveTo(200, 100);
-            ctx.lineTo(200, 700);
-            ctx.stroke();
+            const v1 = document.createElement('div');
+            v1.className = 'board-line vertical';
+            v1.style.left = '33.33%';
+            boardElement.appendChild(v1);
             
-            ctx.beginPath();
-            ctx.moveTo(400, 100);
-            ctx.lineTo(400, 700);
-            ctx.stroke();
+            const v2 = document.createElement('div');
+            v2.className = 'board-line vertical';
+            v2.style.left = '66.66%';
+            boardElement.appendChild(v2);
             
             // Horizontal lines
-            ctx.beginPath();
-            ctx.moveTo(0, 300);
-            ctx.lineTo(600, 300);
-            ctx.stroke();
+            const h1 = document.createElement('div');
+            h1.className = 'board-line horizontal';
+            h1.style.top = '33.33%';
+            boardElement.appendChild(h1);
             
-            ctx.beginPath();
-            ctx.moveTo(0, 500);
-            ctx.lineTo(600, 500);
-            ctx.stroke();
+            const h2 = document.createElement('div');
+            h2.className = 'board-line horizontal';
+            h2.style.top = '66.66%';
+            boardElement.appendChild(h2);
         }
-
-        // Initialize board
-        drawBoardLines();
-
+        
+        function addGlowEffects() {
+            // Add random glow dots
+            for (let i = 0; i < 20; i++) {
+                const glow = document.createElement('div');
+                glow.className = 'glow';
+                glow.style.width = Math.random() * 10 + 5 + 'px';
+                glow.style.height = glow.style.width;
+                glow.style.left = Math.random() * 100 + '%';
+                glow.style.top = Math.random() * 100 + '%';
+                glow.style.backgroundColor = i % 2 === 0 ? 'var(--neon-blue)' : 'var(--neon-pink)';
+                boardElement.appendChild(glow);
+            }
+        }
+        
         // Game functions
         function handleCellClick(e) {
             if (winner) return;
             
-            const index = e.target.dataset.index;
-            if (board[index]) return;
+            const index = parseInt(e.target.dataset.index);
+            if (board[index] !== null) return;
             
-            board[index] = currentPlayer;
+            // Human move
+            makeMove(index, currentPlayer);
+            
+            // AI move (if applicable)
+            if (!winner && gameMode === 1 && currentPlayer === 'O') {
+                setTimeout(() => {
+                    const aiMove = getAIMove();
+                    if (aiMove !== null) {
+                        makeMove(aiMove, 'O');
+                    }
+                }, 500);
+            }
+        }
+        
+        function makeMove(index, player) {
+            board[index] = player;
             renderBoard();
             
             winner = checkWinner();
@@ -157,10 +361,10 @@
                 return;
             }
             
-            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            currentPlayer = player === 'X' ? 'O' : 'X';
             updateStatus();
         }
-
+        
         function checkWinner() {
             const winPatterns = [
                 [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
@@ -177,11 +381,11 @@
             }
             return null;
         }
-
+        
         function isBoardFull() {
             return board.every(cell => cell !== null);
         }
-
+        
         function renderBoard() {
             const cells = document.querySelectorAll('.cell');
             cells.forEach((cell, index) => {
@@ -190,58 +394,238 @@
                     : '';
             });
         }
-
+        
         function renderWinLine() {
             if (!winLine) return;
             
             // Remove existing win line if any
-            const existingLine = document.querySelector('.neon-line');
-            if (existingLine) existingLine.remove();
+            document.querySelectorAll('.win-line').forEach(el => el.remove());
             
             const line = document.createElement('div');
-            line.className = 'neon-line';
+            line.className = 'win-line';
             
             const [a, b, c] = winLine;
-            const cellSize = 200;
+            const cellSize = boardElement.offsetWidth / 3;
             const startX = (a % 3) * cellSize + cellSize / 2;
-            const startY = Math.floor(a / 3) * cellSize + cellSize / 2 + 100;
+            const startY = Math.floor(a / 3) * cellSize + cellSize / 2;
             const endX = (c % 3) * cellSize + cellSize / 2;
-            const endY = Math.floor(c / 3) * cellSize + cellSize / 2 + 100;
+            const endY = Math.floor(c / 3) * cellSize + cellSize / 2;
             
             const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
             const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
             
             line.style.width = `${length}px`;
-            line.style.height = '6px';
             line.style.left = `${startX}px`;
             line.style.top = `${startY}px`;
-            line.style.transformOrigin = '0 50%';
             line.style.transform = `rotate(${angle}deg)`;
             
-            document.getElementById('game-container').appendChild(line);
+            boardElement.appendChild(line);
         }
-
+        
         function updateStatus() {
-            const status = document.getElementById('status');
             if (winner) {
-                status.textContent = winner === 'Draw' 
+                statusElement.textContent = winner === 'Draw' 
                     ? "It's a Draw!" 
                     : `Player ${winner} wins!`;
-                status.style.color = winner === 'Draw' ? '#cccccc' : '#00ff00';
+                statusElement.style.color = winner === 'Draw' ? '#cccccc' : '#00ff00';
+                statusElement.style.textShadow = winner === 'Draw' ? 'none' : '0 0 10px #00ff00';
             } else {
-                status.textContent = `Player ${currentPlayer}'s turn`;
-                status.style.color = currentPlayer === 'X' ? '#00c8ff' : '#ff0080';
+                statusElement.textContent = `Player ${currentPlayer}'s turn`;
+                statusElement.style.color = currentPlayer === 'X' ? 'var(--neon-blue)' : 'var(--neon-pink)';
+                statusElement.style.textShadow = currentPlayer === 'X' 
+                    ? '0 0 10px var(--neon-blue)' 
+                    : '0 0 10px var(--neon-pink)';
             }
         }
-
+        
         function updateScores() {
-            document.getElementById('scores').textContent = 
-                `X: ${scores.X} | O: ${scores.O} | Draws: ${scores.Draw}`;
+            scoresElement.textContent = `X: ${scores.X} | O: ${scores.O} | Draws: ${scores.Draw}`;
         }
+        
+        // AI Logic
+        function getAIMove() {
+            const availableMoves = board.map((cell, index) => cell === null ? index : null)
+                                       .filter(val => val !== null);
+            
+            if (availableMoves.length === 0) return null;
+            
+            // Easy AI - random moves
+            if (difficulty === 'Easy') {
+                return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+            }
+            
+            // Medium AI - sometimes blocks or wins
+            if (difficulty === 'Medium') {
+                // 50% chance to make a smart move
+                if (Math.random() > 0.5) {
+                    // Check for winning move
+                    for (const move of availableMoves) {
+                        const testBoard = [...board];
+                        testBoard[move] = 'O';
+                        if (checkWinner(testBoard) === 'O') return move;
+                    }
+                    
+                    // Block opponent's winning move
+                    for (const move of availableMoves) {
+                        const testBoard = [...board];
+                        testBoard[move] = 'X';
+                        if (checkWinner(testBoard) === 'X') return move;
+                    }
+                }
+                return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+            }
+            
+            // Hard AI - minimax algorithm
+            if (difficulty === 'Hard') {
+                return minimax(board, 'O').index;
+            }
+        }
+        
+        function minimax(board, player) {
+            const availableMoves = board.map((cell, index) => cell === null ? index : null)
+                                       .filter(val => val !== null);
+            
+            // Base cases
+            if (checkWinner(board) === 'O') return { score: 1 };
+            if (checkWinner(board) === 'X') return { score: -1 };
+            if (availableMoves.length === 0) return { score: 0 };
+            
+            const moves = [];
+            
+            for (const move of availableMoves) {
+                const newBoard = [...board];
+                newBoard[move] = player;
+                
+                const result = minimax(newBoard, player === 'O' ? 'X' : 'O');
+                moves.push({
+                    index: move,
+                    score: result.score
+                });
+            }
+            
+            let bestMove;
+            if (player === 'O') {
+                let bestScore = -Infinity;
+                for (const move of moves) {
+                    if (move.score > bestScore) {
+                        bestScore = move.score;
+                        bestMove = move;
+                    }
+                }
+            } else {
+                let bestScore = Infinity;
+                for (const move of moves) {
+                    if (move.score < bestScore) {
+                        bestScore = move.score;
+                        bestMove = move;
+                    }
+                }
+            }
+            
+            return bestMove;
+        }
+        
+        function checkWinner(boardState = board) {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]             // diagonals
+            ];
 
-        // Initialize game
-        updateStatus();
-        updateScores();
+            for (const pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+                    return boardState[a];
+                }
+            }
+            return null;
+        }
+        
+        // Game flow control
+        function resetGame() {
+            board.fill(null);
+            currentPlayer = 'X';
+            winner = null;
+            winLine = null;
+            
+            document.querySelectorAll('.win-line').forEach(el => el.remove());
+            renderBoard();
+            updateStatus();
+        }
+        
+        function startGame(mode) {
+            gameMode = mode;
+            
+            if (mode === 1) {
+                // Show difficulty menu for AI
+                mainMenu.style.display = 'none';
+                difficultyMenu.style.display = 'flex';
+            } else {
+                // Start 2-player game
+                mainMenu.style.display = 'none';
+                header.style.display = 'block';
+                boardContainer.style.display = 'flex';
+                controls.style.display = 'flex';
+                initializeBoard();
+                resetGame();
+            }
+        }
+        
+        function setDifficulty(level) {
+            difficulty = level;
+            difficultyMenu.style.display = 'none';
+            header.style.display = 'block';
+            boardContainer.style.display = 'flex';
+            controls.style.display = 'flex';
+            initializeBoard();
+            resetGame();
+        }
+        
+        function showOnlineMenu() {
+            mainMenu.style.display = 'none';
+            onlineMenu.style.display = 'flex';
+        }
+        
+        function hostGame() {
+            isOnlineHost = true;
+            // In a real implementation, you would set up WebSocket connection here
+            alert('Online hosting would require a server (not implemented in this demo)');
+            backToMainMenu();
+        }
+        
+        function joinGame() {
+            isOnlineHost = false;
+            // In a real implementation, you would connect to a host here
+            alert('Joining online game would require a server (not implemented in this demo)');
+            backToMainMenu();
+        }
+        
+        function showMainMenu() {
+            header.style.display = 'none';
+            boardContainer.style.display = 'none';
+            controls.style.display = 'none';
+            mainMenu.style.display = 'flex';
+            difficultyMenu.style.display = 'none';
+            onlineMenu.style.display = 'none';
+        }
+        
+        function backToMainMenu() {
+            difficultyMenu.style.display = 'none';
+            onlineMenu.style.display = 'none';
+            mainMenu.style.display = 'flex';
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                showMainMenu();
+            } else if (e.key === 'r' || e.key === 'R') {
+                resetGame();
+            }
+        });
+        
+        // Initialize
+        initializeBoard();
     </script>
 </body>
 </html>
