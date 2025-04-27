@@ -21,8 +21,11 @@
             touch-action: manipulation;
             overflow: hidden;
             height: 100vh;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="%2300c8ff" stroke-width="2"/></svg>') 8 8, auto;
         }
-        
+        .cell:hover {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="%23ff0080" stroke-width="3"/></svg>') 12 12, pointer;
+            }
         #game-container {
             width: 100%;
             max-width: 600px;
@@ -231,6 +234,38 @@
             user-select: none;
             -webkit-user-select: none;
         }
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            opacity: 0.7;
+            animation: float 15s infinite linear;
+        }
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            opacity: 1;
+            transition: all 1.5s ease-out;
+            z-index: 100;
+        }
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-100px) translateX(20px); }
+            100% { transform: translateY(0) translateX(0); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .win-animation {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
     </style>
 </head>
 <body>
@@ -241,7 +276,7 @@
     <div id="game-container">
         <div id="menu">
             <div class="menu-title">NEON TIC TAC TOE</div>
-            <div class="menu-option" onclick="startGame(1)">VS AI</div>
+            <div class="menu-option" onclick="startGame(1)"> You VS AI</div>
             <div class="menu-option" onclick="startGame(2)">2 PLAYERS</div>
             <div id="online-option" class="menu-option" onclick="showOnlineMenu()">ONLINE MATCH</div>
         </div>
@@ -278,6 +313,13 @@
     </div>
 
     <script>
+        // Add to beginning of JS
+        const motionOK = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Then wrap animations with:
+        if (motionOK) {
+        // Run animations
+        }
         // Game state
         const board = Array(9).fill(null);
         let currentPlayer = 'X';
@@ -591,7 +633,11 @@
             }
             return null;
         }
-        
+        // Apply to board on win:
+        boardElement.classList.add('win-animation');
+        setTimeout(() => {
+        boardElement.classList.remove('win-animation');
+        }, 500);
         // Game flow control
         function resetGame() {
             board.fill(null);
@@ -659,7 +705,46 @@
             difficultyMenu.style.display = 'none';
             onlineMenu.style.display = 'none';
         }
+        // Audio setup
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, type) {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
         
+        oscillator.type = type;
+        oscillator.frequency.value = freq;
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        gainNode.gain.exponentialRampToValueAtTime(
+            0.0001, audioContext.currentTime + 0.5
+        );
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.5);
+        }
+        function showConfetti() {
+            const confettiCount = 100;
+            const container = document.getElementById('board');
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = winner === 'X' ? 
+                'var(--neon-blue)' : 'var(--neon-pink)';
+                confetti.style.left = `${50 + (Math.random() - 0.5) * 20}%`;
+                container.appendChild(confetti);
+                
+                setTimeout(() => {
+                confetti.style.transform = `translate(${(Math.random() - 0.5) * 200}px, 
+                    ${Math.random() * 300}px) rotate(${Math.random() * 360}deg)`;
+                confetti.style.opacity = '0';
+                }, 10);
+            }
+        }
+
+        // Call these in makeMove():
+        playSound(currentPlayer === 'X' ? 523.25 : 659.25, 'sine'); // X=Note C5, O=Note E5
+        if (winner) playSound(987.77, 'square'); // Win=B5
         function backToMainMenu() {
             difficultyMenu.style.display = 'none';
             onlineMenu.style.display = 'none';
@@ -684,7 +769,44 @@
                 resetGame();
             }
         });
-        
+        // Save scores
+        function saveScores() {
+            localStorage.setItem('neonTicTacToeScores', JSON.stringify(scores));
+        }
+
+        // Load scores
+        function loadScores() {
+            const saved = localStorage.getItem('neonTicTacToeScores');
+            if (saved) scores = JSON.parse(saved);
+            updateScores();
+        }
+        function vibrate() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(30); // 30ms vibration
+            }
+        }
+        let dynamicDifficulty = 'Medium';
+
+        function adjustDifficulty() {
+            const scoreDiff = scores.X - scores.O;
+            if (scoreDiff > 3) dynamicDifficulty = 'Hard';
+            else if (scoreDiff < -3) dynamicDifficulty = 'Easy';
+            else dynamicDifficulty = 'Medium';
+            }
+
+        // Call after each game
+        // Call loadScores() on init and saveScores() after each game
+        function createParticles() {
+            const container = document.getElementById('game-container');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(particle);
+            }
+        }
         // Initialize
         initializeBoard();
     </script>
