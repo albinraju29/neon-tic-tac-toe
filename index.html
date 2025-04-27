@@ -1,16 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Neon Tic Tac Toe</title>
+    <title>NEON TIC TAC TOE (Web)</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <script src="https://pygame-web.github.io/install.js"></script>
     <style>
-        body { text-align: center; font-family: Arial; }
-        a { display: inline-block; margin: 20px; padding: 10px 20px; background: #0d6efd; color: white; text-decoration: none; border-radius: 5px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0a0a14;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #game-container {
+            margin: 20px auto;
+            width: 600px;
+            height: 700px;
+        }
+        #loading {
+            margin-top: 50px;
+            font-size: 24px;
+            color: #00c8ff;
+        }
     </style>
 </head>
 <body>
-    <h1>Neon Tic Tac Toe</h1>
-    <p>A Python game by Albin Raju</p>
-    <a href="https://github.com/albinraju29/neon-tic-tac-toe/archive/refs/heads/main.zip">Download Game</a>
-    <p>Run locally with Python after downloading.</p>
+    <h1>NEON TIC TAC TOE</h1>
+    <div id="game-container"></div>
+    <div id="loading">Loading game (may take 30 seconds)...</div>
+
+    <script>
+        // Initialize Pyodide and load pygame
+        async function setupPygame() {
+            console.log("Setting up Pyodide...");
+            
+            // Load Pyodide
+            let pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
+            });
+            
+            // Load required packages
+            await pyodide.loadPackage(["micropip"]);
+            await pyodide.runPythonAsync(`
+                import micropip
+                await micropip.install('pygame')
+            `);
+            
+            return pyodide;
+        }
+
+        // Main game loader
+        async function loadGame() {
+            const pyodide = await setupPygame();
+            const response = await fetch("tictacto.py");
+            const code = await response.text();
+            
+            // Hide loading message
+            document.getElementById("loading").style.display = "none";
+            
+            // Run the game
+            try {
+                await pyodide.runPythonAsync(code);
+            } catch (e) {
+                console.error("Error running game:", e);
+                document.getElementById("loading").textContent = 
+                    "Error: Game couldn't load. Check console for details.";
+            }
+        }
+
+        // Start loading the game
+        loadGame();
+    </script>
 </body>
 </html>
