@@ -276,7 +276,7 @@
     <div id="game-container">
         <div id="menu">
             <div class="menu-title">TIC TAC TOE</div>
-            <div class="menu-option" onclick="startGame(1)">You You VS AI</div>
+            <div class="menu-option" onclick="startGame(1)">You VS AI</div>
             <div class="menu-option" onclick="startGame(2)">2 PLAYERS</div>
             <div id="online-option" class="menu-option" onclick="showOnlineMenu()">ONLINE MATCH</div>
         </div>
@@ -351,23 +351,25 @@
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.dataset.index = i;
-                // Replace existing cell event listeners with these:
+                
+                // Standard click for desktop
+                cell.addEventListener('click', handleCellClick);
+                
+                // Touch support for mobile
                 cell.addEventListener('touchstart', function(e) {
-                    e.preventDefault(); // Prevent touch scroll
+                    e.preventDefault();
                     this.classList.add('touched');
                     handleCellClick({target: this});
                 }, {passive: false});
-
+                
                 cell.addEventListener('touchend', function() {
                     this.classList.remove('touched');
                 });
+                
                 boardElement.appendChild(cell);
             }
             
-            // Draw board lines
             drawBoardLines();
-            
-            // Add glow effects
             addGlowEffects();
         }
         
@@ -443,6 +445,14 @@
                 renderWinLine();
                 updateStatus();
                 updateScores();
+                
+                // Add win animation here instead
+                if (motionOK) {
+                    boardElement.classList.add('win-animation');
+                    setTimeout(() => {
+                        boardElement.classList.remove('win-animation');
+                    }, 500);
+                }
                 return;
             }
             
@@ -633,11 +643,6 @@
             }
             return null;
         }
-        // Apply to board on win:
-        boardElement.classList.add('win-animation');
-        setTimeout(() => {
-        boardElement.classList.remove('win-animation');
-        }, 500);
         // Game flow control
         function resetGame() {
             board.fill(null);
