@@ -1,29 +1,28 @@
-Here's an enhanced `README.md` that properly includes the Python/Pygame version with clear installation instructions for both versions (web and Python):
 
 ```markdown
 # Neon Tic Tac Toe 🌟
 
 Dual-version Tic Tac Toe game available as:
-1. **Web Version** (HTML/CSS/JS) - Play instantly in browsers
-2. **Python Version** (Pygame) - Feature-rich desktop experience
+1. Web Version (HTML/CSS/JS) - Play instantly in browsers
+2. Python Version (Pygame) - Feature-rich desktop experience
 
 ![Game Screenshot](https://i.imgur.com/JqV6Q0U.png)
 
-## 🌐 Web Version Features
+ 🌐 Web Version Features
 - ✅ Play directly in browser
 - ✅ Mobile-friendly touch controls
 - ✅ No installation needed
 - ✅ AI with 3 difficulty levels
 
-## 🐍 Python Version Features
+ 🐍 Python Version Features
 - 🔊 Sound effects & music
 - 🖥️ Resizable window
 - 🌈 Advanced neon visuals
 - ⚡ Optimized game logic
 
-## Installation Guide
+ Installation Guide
 
-### Web Version
+ Web Version
 Simply visit:  
 [GitHub Pages Demo](https://albinraju29.github.io/neon-tic-tac-toe)
 
@@ -34,20 +33,19 @@ cd neon-tic-tac-toe
 # Open index.html in any browser
 ```
 
-### Python Version
-**Requirements**:
+ Python Version
+Requirements:
 - Python 3.6+
 - Pygame 2.0+
 
-**Installation**:
+Installation:
 ```bash
 git clone https://github.com/albinraju29/neon-tic-tac-toe.git
 cd neon-tic-tac-toe
 
-# Install Pygame
+Install Pygame
 pip install pygame
-
-# Run the game
+ Run the game
 python tictacto.py
 ```
 
