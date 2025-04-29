@@ -1,6 +1,6 @@
 
 
-```markdown
+markdown
 # Neon Tic Tac Toe 🌟  
 **Dual-Platform Game (Web & Desktop)**  
 
